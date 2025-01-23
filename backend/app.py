@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from flask_cors import CORS  # Import Flask-CORS
+from flask_cors import CORS
 import nltk
 from nltk.tokenize import word_tokenize
 from sklearn.ensemble import RandomForestClassifier
@@ -8,15 +8,14 @@ import numpy as np
 # Initialize Flask app
 app = Flask(__name__)
 
-# Enable CORS for all routes
-CORS(app)
+# Enable CORS for a specific origin
+CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
 
 # Download necessary NLTK resources
 nltk.download('punkt')
 
 # Dummy ML model (replace with a real one later)
 # For simplicity, we'll use a random forest classifier to predict satisfaction
-# Training data: [positive words, negative words] -> [satisfaction]
 X_train = [
     [1, 0],  # positive
     [0, 1],  # negative
@@ -25,11 +24,11 @@ X_train = [
 ]
 y_train = [1, 0, 1, 0]  # 1: Satisfied, 0: Unsatisfied
 
-# Train a basic random forest classifier (can be replaced with a more advanced model)
+# Train a basic random forest classifier
 model = RandomForestClassifier()
 model.fit(X_train, y_train)
 
-# Dummy function to analyze feedback with NLP (tokenizing and counting positive/negative words)
+# Function to analyze feedback with NLP (tokenizing and counting positive/negative words)
 def analyze_feedback(feedback):
     positive_words = ['good', 'great', 'happy', 'excellent', 'amazing']
     negative_words = ['bad', 'poor', 'sad', 'terrible', 'unhappy']
@@ -40,38 +39,43 @@ def analyze_feedback(feedback):
 
     return tokens, positive_count, negative_count
 
-# Function to predict satisfaction using ML (simple random forest classifier here)
+# Function to predict satisfaction using the ML model
 def predict_satisfaction(positive_count, negative_count):
     features = np.array([[positive_count, negative_count]])
     prediction = model.predict(features)
-    
-    if prediction == 1:
-        return "Satisfied", "green"
-    elif prediction == 0:
-        return "Unsatisfied", "red"
-    else:
-        return "Neutral", "blue"
+
+    # Map predictions to satisfaction levels and colors
+    satisfaction_map = {1: ("Satisfied", "green"), 0: ("Unsatisfied", "red")}
+    return satisfaction_map.get(prediction[0], ("Neutral", "blue"))
 
 # Define route to handle feedback analysis
 @app.route('/analyze', methods=['POST'])
 def analyze():
-    data = request.get_json()
-    feedback = data.get('feedback')
+    try:
+        # Parse JSON request
+        data = request.get_json()
+        feedback = data.get('feedback')
 
-    if not feedback:
-        return jsonify({'error': 'No feedback provided'}), 400
+        # Validate feedback input
+        if not feedback:
+            return jsonify({'error': 'No feedback provided'}), 400
 
-    # Analyze feedback with NLP
-    tokens, positive_count, negative_count = analyze_feedback(feedback)
+        # Analyze feedback using NLP
+        tokens, positive_count, negative_count = analyze_feedback(feedback)
 
-    # Predict satisfaction with ML
-    satisfaction, color = predict_satisfaction(positive_count, negative_count)
+        # Predict satisfaction level
+        satisfaction, color = predict_satisfaction(positive_count, negative_count)
 
-    return jsonify({
-        'tokens': tokens,
-        'satisfaction': satisfaction,
-        'color': color
-    })
+        # Return analysis results
+        return jsonify({
+            'tokens': tokens,
+            'positive_count': positive_count,
+            'negative_count': negative_count,
+            'satisfaction': satisfaction,
+            'color': color
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
