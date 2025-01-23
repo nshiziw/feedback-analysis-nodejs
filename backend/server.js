@@ -1,14 +1,10 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const natural = require("natural");
-const cors = require("cors"); // Import the cors middleware
+const cors = require("cors");
 
 const app = express();
-
-// Enable CORS
 app.use(cors());
-
-// Middleware
 app.use(bodyParser.json());
 
 // Define ML logic for satisfaction prediction
@@ -25,7 +21,18 @@ function predictSatisfaction(feedback) {
         if (negativeWords.includes(word)) score -= 1;
     });
 
-    return score > 0 ? "Satisfied" : score < 0 ? "Unsatisfied" : "Neutral";
+    let satisfaction = "Neutral";
+    let color = "blue"; // Default color for Neutral
+
+    if (score > 0) {
+        satisfaction = "Satisfied";
+        color = "green";
+    } else if (score < 0) {
+        satisfaction = "Unsatisfied";
+        color = "red";
+    }
+
+    return { satisfaction, color };
 }
 
 // API for analyzing feedback
@@ -36,16 +43,16 @@ app.post("/analyze", (req, res) => {
         return res.status(400).json({ error: "Feedback is required" });
     }
 
-    // Analyze sentiment
     const tokenizer = new natural.WordTokenizer();
     const tokens = tokenizer.tokenize(feedback);
 
     // Predict satisfaction
-    const satisfaction = predictSatisfaction(feedback);
+    const { satisfaction, color } = predictSatisfaction(feedback);
 
     res.json({
         tokens,
         satisfaction,
+        color,
     });
 });
 

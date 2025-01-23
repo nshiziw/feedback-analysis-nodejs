@@ -27,6 +27,10 @@
     .result {
       margin-top: 1rem;
     }
+    .satisfaction {
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
   </style>
 </head>
 <body>
@@ -36,7 +40,7 @@
   <div class="result">
     <h3>Results:</h3>
     <p id="tokens"></p>
-    <p id="satisfaction"></p>
+    <p id="satisfaction" class="satisfaction"></p>
   </div>
 
   <script>
@@ -57,7 +61,11 @@
 
         const data = await response.json();
         document.getElementById("tokens").innerText = "Tokens: " + data.tokens.join(", ");
-        document.getElementById("satisfaction").innerText = "Satisfaction: " + data.satisfaction;
+        
+        // Update the satisfaction text and color
+        const satisfactionElement = document.getElementById("satisfaction");
+        satisfactionElement.innerText = "Satisfaction: " + data.satisfaction;
+        satisfactionElement.style.color = data.color;  // Dynamically change the color based on satisfaction
       } catch (error) {
         console.error("Error analyzing feedback:", error);
       }
