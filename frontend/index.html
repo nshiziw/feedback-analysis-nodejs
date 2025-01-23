@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feedback Analysis</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2rem;
+    }
+    textarea {
+      width: 100%;
+      height: 100px;
+      margin-bottom: 1rem;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      background-color: teal;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: darkcyan;
+    }
+    .result {
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Feedback Analysis</h1>
+  <textarea id="feedbackInput" placeholder="Enter feedback here..."></textarea>
+  <button onclick="analyzeFeedback()">Analyze</button>
+  <div class="result">
+    <h3>Results:</h3>
+    <p id="tokens"></p>
+    <p id="satisfaction"></p>
+  </div>
+
+  <script>
+    async function analyzeFeedback() {
+      const feedback = document.getElementById("feedbackInput").value;
+
+      if (!feedback) {
+        alert("Please enter feedback!");
+        return;
+      }
+
+      try {
+        const response = await fetch("http://localhost:3000/analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ feedback }),
+        });
+
+        const data = await response.json();
+        document.getElementById("tokens").innerText = "Tokens: " + data.tokens.join(", ");
+        document.getElementById("satisfaction").innerText = "Satisfaction: " + data.satisfaction;
+      } catch (error) {
+        console.error("Error analyzing feedback:", error);
+      }
+    }
+  </script>
+</body>
+</html>
