@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS  # Import Flask-CORS
 import nltk
 from nltk.tokenize import word_tokenize
 from sklearn.ensemble import RandomForestClassifier
@@ -6,6 +7,9 @@ import numpy as np
 
 # Initialize Flask app
 app = Flask(__name__)
+
+# Enable CORS for all routes
+CORS(app)
 
 # Download necessary NLTK resources
 nltk.download('punkt')
